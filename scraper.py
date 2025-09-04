@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import csv
 from datetime import datetime
+import re
 
 # target url
 URL = "https://finance.yahoo.com/markets/stocks/most-active/"
@@ -34,7 +35,7 @@ def scrape_info():
                 continue
             header_map[header] = data_index
             data_index += 1
-        print(header_map)
+
         prices = []
 
         for tr in table.find_all("tr"):
@@ -55,50 +56,49 @@ def scrape_info():
                     "52w": row[header_map["52 WkChange %"]] if "52 WkChange %" in header_map else "",
                 }
 
-                # try:
-                #     if price_data["Price"]:
-                #         # price_data["Price"] = float(
-                #         #     price_data["Price"].split()[0])
-                #         print(price_data["Price"])
+                try:
+                    if price_data["Price"]:
+                        price_data["Price"] = re.split(
+                            r'[+-]', price_data["Price"])[0]
 
-                # except (ValueError, IndexError) as e:
-                #     print(f"Error parsing data for row {row}: {e}")
+                except (ValueError, IndexError) as e:
+                    print(f"Error parsing data for row {row}: {e}")
 
                 prices.append(price_data)
 
-        for index, p in enumerate(prices):
-            #     # print(p["Ticker"] + " " + p["Name"] + " " + p["Price"] + " " + p["Change"] + " " + p["Change%"] +
-            #     #       " " + p["Volume"] + " " + p["av"] + " " + p["mc"] + " " + p["per"] + " " + p["52w"])
-            print(p)
-            print("")
-            if index == 3:
-                break
+        return prices
 
     except Exception as e:
         print(f"Error getting data: {e}")
+        return []
 
 
 def scrape_one(stock):
     try:
         response = requests.get(URL_STOCK.format(name=stock), headers=HEADERS)
         soup = BeautifulSoup(response.text, "html.parser")
-        check = soup.find("section", class_="split-panel")
-        ul = check.find("ul")
-        lid = [li.get_text(strip=True)
-               for li in ul.find_all("span", class_="value")]
-        print(lid)
+        split_panel_info = soup.find("section", class_="split-panel")
+        ul = split_panel_info.find("ul")
+        values = [li.get_text(strip=True)
+                  for li in ul.find_all("span", class_="value")]
+        labels = [li.get_text(strip=True)
+                  for li in ul.find_all("span", class_="label")]
+        lv_zip = zip(labels, values)
+        return lv_zip
     except Exception as e:
         print(f"Error getting data: {e}")
+        return None
 
 
 if __name__ == "__main__":
-    scrape_one("GOOGL")
+    prices = scrape_info()
 
+    for index, p in enumerate(prices):
+        print(str(index + 1) + " " + p["Ticker"] + " " + p["Name"] + " " + p["Price"] + " " + p["Change"] + " " + p["Change%"] +
+              " " + p["Volume"] + " " + p["av"] + " " + p["mc"] + " " + p["per"] + " " + p["52w"])
+        # print(p)
+        print("")
 
-# prices = []
-#     for item in soup.select(".thumbnail"):
-#         name = item.select_one(".title").get_text(strip=True)
-#         price = item.select_one(".price").get_text(strip=True)
-#         rating = item.select_one(".ratings p[data-rating]")["data-rating"]
-#         link = "https://webscraper.io" + item.select_one(".title")["href"]
-# streamlit cloud
+    one = scrape_one("OPEN")
+    for label, value in one:
+        print(label, value)
