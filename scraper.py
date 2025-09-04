@@ -5,6 +5,7 @@ from datetime import datetime
 
 # target url
 URL = "https://finance.yahoo.com/markets/stocks/most-active/"
+URL_STOCK = "https://finance.yahoo.com/quote/{name}/"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -77,8 +78,21 @@ def scrape_info():
         print(f"Error getting data: {e}")
 
 
+def scrape_one(stock):
+    try:
+        response = requests.get(URL_STOCK.format(name=stock), headers=HEADERS)
+        soup = BeautifulSoup(response.text, "html.parser")
+        check = soup.find("section", class_="split-panel")
+        ul = check.find("ul")
+        lid = [li.get_text(strip=True)
+               for li in ul.find_all("span", class_="value")]
+        print(lid)
+    except Exception as e:
+        print(f"Error getting data: {e}")
+
+
 if __name__ == "__main__":
-    scrape_info()
+    scrape_one("GOOGL")
 
 
 # prices = []
