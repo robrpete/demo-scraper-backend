@@ -19,17 +19,13 @@ def init_db(db_path="stocks.db"):
 
 
 def save_to_db(prices, db_path="stocks.db"):
-    """Save a list of price dictionaries from scrape_prices to the stocks table."""
+    """Save a list of price dictionaries from scrape_prices to the stocks table using batch insert."""
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        for price in prices:
-            cursor.execute("""
-                INSERT INTO stocks (
-                    timestamp, ticker, name, price, change, change_percent,
-                    volume, avg_vol, market_cap, pe_ratio, _52w_change
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
+        # Prepare list of tuples for batch insert
+        data = [
+            (
                 price.get("timestamp"),
                 price.get("ticker"),
                 price.get("name"),
@@ -41,7 +37,15 @@ def save_to_db(prices, db_path="stocks.db"):
                 price.get("market_cap"),
                 price.get("pe_ratio"),
                 price.get("52w_change")
-            ))
+            )
+            for price in prices
+        ]
+        cursor.executemany("""
+            INSERT INTO stocks (
+                timestamp, ticker, name, price, change, change_percent,
+                volume, avg_vol, market_cap, pe_ratio, _52w_change
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, data)
         conn.commit()
         print(f"Saved {len(prices)} records to stocks table.")
     except sqlite3.Error as e:

@@ -44,23 +44,23 @@ def scrape_info():
             if row:  # skip empty rows
                 price_data = {
                     "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M-%S"),
-                    "Ticker": row[header_map["Symbol"]] if "Symbol" in header_map else "",
-                    "Name": row[header_map["Name"]] if "Name" in header_map else "",
-                    "Price": row[header_map["Price"]] if "Price" in header_map else "",
-                    "Change": row[header_map["Change"]] if "Change" in header_map else "",
-                    "Change%": row[header_map["Change %"]] if "Change %" in header_map else "",
-                    "Volume": row[header_map["Volume"]] if "Volume" in header_map else "",
-                    "av": row[header_map["Avg Vol (3M)"]] if "Avg Vol (3M)" in header_map else "",
-                    "mc": row[header_map["Market Cap"]] if "Market Cap" in header_map else "",
-                    "per": row[header_map["P/E Ratio(TTM)"]] if "P/E Ratio(TTM)" in header_map else "",
-                    "52w": row[header_map["52 WkChange %"]] if "52 WkChange %" in header_map else "",
+                    "ticker": row[header_map["Symbol"]] if "Symbol" in header_map else "",
+                    "name": row[header_map["Name"]] if "Name" in header_map else "",
+                    "price": row[header_map["Price"]] if "Price" in header_map else "",
+                    "change": row[header_map["Change"]] if "Change" in header_map else "",
+                    "change_percent": row[header_map["Change %"]] if "Change %" in header_map else "",
+                    "volume": row[header_map["Volume"]] if "Volume" in header_map else "",
+                    "avg_vol": row[header_map["Avg Vol (3M)"]] if "Avg Vol (3M)" in header_map else "",
+                    "market_cap": row[header_map["Market Cap"]] if "Market Cap" in header_map else "",
+                    "pe_ratio": row[header_map["P/E Ratio(TTM)"]] if "P/E Ratio(TTM)" in header_map else "",
+                    "52w_change": row[header_map["52 WkChange %"]] if "52 WkChange %" in header_map else "",
                 }
 
+                # Clean Price field
                 try:
-                    if price_data["Price"]:
-                        price_data["Price"] = re.split(
-                            r'[+-]', price_data["Price"])[0]
-
+                    if price_data["price"]:
+                        price_data["price"] = re.split(
+                            r'[+-]', price_data["price"])[0]
                 except (ValueError, IndexError) as e:
                     print(f"Error parsing data for row {row}: {e}")
 
