@@ -38,18 +38,16 @@
 
 ## API Endpoints
 
-- `GET /all_info`: Returns all stock data from the `stocks` table.
-- `GET /name_info`: Returns `ticker` and `name` for the latest four stocks.
-- `GET /stock_info/{ticker}`: Scrapes and saves detailed metrics for a specific stock ticker.
+- `GET /all_stocks`: Returns all most active stock data for that day from the `stocks` table.
+- `GET /stock_info/{ticker}`: Scrapes and saves detailed metrics for a specific stock.
 
 ## Database
 
 - **SQLite**: Uses `stocks.db` with two tables:
-  - `stocks`: Stores daily data from the most-active stocks page (e.g., `ticker`, `price`, `volume`).
+  - `stocks`: Stores stocks daily data from yahoo's most-active stocks page (e.g., `ticker`, `price`, `volume`).
   - `stock_details`: Stores detailed metrics for individual stocks (e.g., `PrevClose`, `Open`, `Bid`).
-- **Schema**: Defined in `schema.py`, with all `stock_details` values stored as `TEXT`.
+- **Schema**: Defined in `schema.py`
 
 ## Notes
 
-- **Scraping Schedule**: Daily scrape of most-active stocks runs at 00:00 EDT.
-- **Deployment**: Suitable for PythonAnywhere or Streamlit Cloud with persistent file storage for `stocks.db`.
+- **Scraping Schedule**: Daily scrape of most-active stocks runs at 08:00 EDT.
