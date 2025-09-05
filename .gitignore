@@ -1,3 +1,4 @@
 stocks.db 
+__pycache__/
 pycache/ *.pyc
 /venv
