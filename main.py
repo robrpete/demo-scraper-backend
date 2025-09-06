@@ -69,44 +69,47 @@ async def get_today_stocks():
 
 @app.get("/stocks/details/{ticker}/{timestamp}")
 async def get_stock_details(ticker: str, timestamp: str):
-    """Return stock details for a specific ticker and timestamp."""
+    """Return stock details for a specific ticker and timestamp.
+    If not found in DB, scrape and save before returning.
+    """
     try:
         details = get_one_stock_details(ticker, timestamp)
-        if not details:
-            raise HTTPException(
-                status_code=404, detail=f"No details found for ticker {ticker} at {timestamp}")
-        return details
+        print(details, ticker, timestamp)
+        if details:
+            return details
+
+        # Not in DB → scrape and save
+        print(f"No details found for {ticker} at {timestamp}, scraping now...")
+        stock_details = scrape_one(ticker)
+
+        if stock_details:
+            save_to_db_details(stock_details, ticker)
+            return stock_details
+
+        raise HTTPException(
+            status_code=404,
+            detail=f"Unable to scrape details for ticker {ticker} at {timestamp}",
+        )
+
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error fetching stock details: {str(e)}")
+            status_code=500,
+            detail=f"Error fetching stock details: {str(e)}",
+        )
 
-
-@app.get("/stocks/scrape-most-active")
-async def scrape_most_active():
-    """Scrape most-active stocks and save to database for testing purposes."""
-    try:
-        prices = scrape_info()
-        for p in prices:
-            print(p)
-        if prices:
-            save_to_db(prices)
-            return f"Successfully scraped and saved {len(prices)} stocks"
-        else:
-            raise HTTPException(status_code=404, detail="No stocks scraped")
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error scraping most-active stocks: {str(e)}")
-
-# from scraper import scrape_info, scrape_one
-# if __name__ == "__main__":
-#     prices = scrape_info()
-
-#     for index, p in enumerate(prices):
-#         print(str(index + 1) + " " + p["Ticker"] + " " + p["Name"] + " " + p["Price"] + " " + p["Change"] + " " + p["Change%"] +
-#               " " + p["Volume"] + " " + p["av"] + " " + p["mc"] + " " + p["per"] + " " + p["52w"] + " " + p["timestamp"])
-
-#         print("")
-
-#     one = scrape_one("OPEN")
-#     for label, value in one:
-#         print(label, value)
+# TEST FUNCTION
+# @app.get("/stocks/scrape-most-active")
+# async def scrape_most_active():
+#     """Scrape most-active stocks and save to database for testing purposes."""
+#     try:
+#         prices = scrape_info()
+#         for p in prices:
+#             print(p)
+#         if prices:
+#             save_to_db(prices)
+#             return f"Successfully scraped and saved {len(prices)} stocks"
+#         else:
+#             raise HTTPException(status_code=404, detail="No stocks scraped")
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500, detail=f"Error scraping most-active stocks: {str(e)}")

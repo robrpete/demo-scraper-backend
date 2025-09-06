@@ -80,8 +80,7 @@ def save_to_db_details(data, ticker, db_path="stocks.db"):
             "1y Target Est": "TargetEst1Y"
         }
         # Convert zip object to dict for easier column mapping
-        price_data = {label_map.get(label, label)
-                                    : value for label, value in data}
+        price_data = {label_map.get(label, label): value for label, value in data}
         cursor.execute("""
             INSERT INTO stock_details (
                 timestamp, ticker, PrevClose, Open, Bid, Ask, DayRange,
@@ -110,8 +109,15 @@ def save_to_db_details(data, ticker, db_path="stocks.db"):
         ))
         conn.commit()
         print(f"Saved details for {ticker} to stock_details table.")
+        return {
+            "timestamp": timestamp,
+            "ticker": ticker,
+            **price_data
+        }
+
     except sqlite3.Error as e:
         print(f"Error saving to stock_details table: {e}")
+        return None
     finally:
         conn.close()
 
@@ -136,18 +142,29 @@ def get_current_day_stocks(db_path="stocks.db"):
 
 
 def get_one_stock_details(ticker, timestamp, db_path="stocks.db"):
-    """Fetch stock_details for a specific ticker and timestamp."""
+    """Fetch stock_details for a specific ticker and date (ignores exact time)."""
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
+
+        # Extract just the date (YYYY-MM-DD) from the incoming timestamp
+        date_only = timestamp.split(" ")[0]
+
         cursor.execute("""
-            SELECT * FROM stock_details WHERE ticker = ? AND timestamp = ?
+            SELECT * FROM stock_details
+            WHERE ticker = ?
+              AND DATE(timestamp) = DATE(?)
+            ORDER BY timestamp DESC
+            LIMIT 1
         """, (ticker, timestamp))
-        columns = [desc[0] for desc in cursor.description]
+
         row = cursor.fetchone()
-        return dict(zip(columns, row)) if row else {}
+        if row:
+            columns = [desc[0] for desc in cursor.description]
+            return dict(zip(columns, row))
+        return None
     except sqlite3.Error as e:
         print(f"Error fetching stock details for {ticker} at {timestamp}: {e}")
-        return {}
+        return None
     finally:
         conn.close()
