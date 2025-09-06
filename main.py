@@ -20,6 +20,11 @@ async def lifespan(app: FastAPI):
     def scrape_and_save():
         """Scrape most-active stocks and save to database."""
         try:
+            existing = get_current_day_stocks()
+            if existing:
+                print("Stocks for today already exist, skipping scrape.")
+                return
+
             prices = scrape_info()
             if prices:
                 save_to_db(prices)
